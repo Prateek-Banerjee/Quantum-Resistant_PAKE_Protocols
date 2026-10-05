@@ -14,7 +14,7 @@ pub use crate::{
     },
 };
 
-pub const DEFAULT_IP: &str = "127.0.0.1";
+pub const DEFAULT_IP: &str = "0.0.0.0";
 pub const DEFAULT_PORT: &str = "8080";
 pub const DEFAULT_LOGIN_THRESHOLD: usize = 3;
 pub const DEFAULT_LOGIN_WINDOW: u64 = 60;
