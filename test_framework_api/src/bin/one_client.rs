@@ -1,28 +1,75 @@
-#![allow(unused_imports)]
-use qr_pake_protocol_executors::{DEFAULT_IP, DEFAULT_PORT, login, register};
-use qr_pake_protocols::{AvailableVariants::*, KemAeClient, KemChoice::*, OcakeClient, TkClient};
+// #![allow(unused_imports)]
+use qr_pake_protocol_executors::{login, parse_client_cli_args, register};
+use qr_pake_protocols::{KemAeClient, OcakeClient, PakeProtocol, TkClient};
 
 #[tokio::main]
 async fn main() {
-    let client_id = b"This is a default pake client id";
-    let client_password = b"This is client default password.";
+    // Get parsed args
+    let (client_id, password, pake_protocol, protcol_variant, kem_choice, ip_address, port) =
+        parse_client_cli_args();
 
-    // Perform registration
-    let client_instance = register::<KemAeClient>(
-        client_id,
-        client_password,
-        LightWeight,
-        None,
-        DEFAULT_IP,
-        DEFAULT_PORT,
-    )
-    .await
-    .expect("Registration failed");
+    let session_key = match pake_protocol {
+        PakeProtocol::KemAePake => {
+            // Perform registration
+            let client_instance = register::<KemAeClient>(
+                client_id.as_bytes(),
+                password.as_bytes(),
+                protcol_variant,
+                None,
+                &ip_address,
+                &port,
+            )
+            .await
+            .expect("Registration failed");
 
-    // Perform login
-    let session_key: [u8; 32] = login::<KemAeClient>(client_instance, DEFAULT_IP, DEFAULT_PORT)
-        .await
-        .expect("Login failed");
+            // Perform login
+            let session_key: [u8; 32] = login::<KemAeClient>(client_instance, &ip_address, &port)
+                .await
+                .expect("Login failed");
+
+            session_key
+        }
+        PakeProtocol::OcakePake => {
+            // Perform registration
+            let client_instance = register::<OcakeClient>(
+                client_id.as_bytes(),
+                password.as_bytes(),
+                protcol_variant,
+                Some(kem_choice),
+                &ip_address,
+                &port,
+            )
+            .await
+            .expect("Registration failed");
+
+            // Perform login
+            let session_key: [u8; 32] = login::<OcakeClient>(client_instance, &ip_address, &port)
+                .await
+                .expect("Login failed");
+
+            session_key
+        }
+        PakeProtocol::TkPake => {
+            // Perform registration
+            let client_instance = register::<TkClient>(
+                client_id.as_bytes(),
+                password.as_bytes(),
+                protcol_variant,
+                None,
+                &ip_address,
+                &port,
+            )
+            .await
+            .expect("Registration failed");
+
+            // Perform login
+            let session_key: [u8; 32] = login::<TkClient>(client_instance, &ip_address, &port)
+                .await
+                .expect("Login failed");
+
+            session_key
+        }
+    };
     println!(
         "\x1b[92m\t Client's Session Key: {:?} \x1b[0m\n",
         session_key

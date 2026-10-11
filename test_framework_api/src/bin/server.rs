@@ -1,25 +1,55 @@
-#![allow(unused_imports)]
-use qr_pake_protocol_executors::{
-    DEFAULT_IP, DEFAULT_LOGIN_THRESHOLD, DEFAULT_LOGIN_WINDOW, DEFAULT_PORT, DEFAULT_TIMEOUT,
-    DefaultStorage, Storage, start_server,
-};
-use qr_pake_protocols::{KemAeServer, OcakeServer, TkServer};
+use qr_pake_protocol_executors::{DefaultStorage, Storage, parse_server_cli_args, run};
+use qr_pake_protocols::{KemAeServer, OcakeServer, PakeProtocol, TkServer};
 use std::sync::Arc;
 
 #[tokio::main]
 async fn main() {
-    // Create the in-memory storage backend
-    let storage =
-        Arc::new(DefaultStorage::<KemAeServer>::new()) as Arc<dyn Storage<_> + Send + Sync>;
+    // Get parsed args
+    let (pake_protocol, ip_address, port, login_threshold, login_window, timeout) =
+        parse_server_cli_args();
 
-    start_server::<KemAeServer>(
-        storage,
-        DEFAULT_IP,
-        DEFAULT_PORT,
-        DEFAULT_LOGIN_THRESHOLD,
-        DEFAULT_LOGIN_WINDOW,
-        DEFAULT_TIMEOUT,
-    )
-    .await
-    .expect("Server failed to start");
+    match pake_protocol {
+        PakeProtocol::KemAePake => {
+            // Create the in-memory storage backend
+            let storage =
+                Arc::new(DefaultStorage::<KemAeServer>::new()) as Arc<dyn Storage<_> + Send + Sync>;
+            run::<KemAeServer>(
+                storage,
+                &ip_address,
+                &port,
+                login_threshold,
+                login_window,
+                timeout,
+            )
+            .await
+        }
+        PakeProtocol::OcakePake => {
+            // Create the in-memory storage backend
+            let storage =
+                Arc::new(DefaultStorage::<OcakeServer>::new()) as Arc<dyn Storage<_> + Send + Sync>;
+            run::<OcakeServer>(
+                storage,
+                &ip_address,
+                &port,
+                login_threshold,
+                login_window,
+                timeout,
+            )
+            .await
+        }
+        PakeProtocol::TkPake => {
+            // Create the in-memory storage backend
+            let storage =
+                Arc::new(DefaultStorage::<TkServer>::new()) as Arc<dyn Storage<_> + Send + Sync>;
+            run::<TkServer>(
+                storage,
+                &ip_address,
+                &port,
+                login_threshold,
+                login_window,
+                timeout,
+            )
+            .await
+        }
+    }
 }

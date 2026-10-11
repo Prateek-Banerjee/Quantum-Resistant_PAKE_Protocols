@@ -24,7 +24,7 @@ use tokio::{io::AsyncReadExt, net::TcpListener, spawn};
 ///
 /// # Returns:
 /// - `Result<()>` - Returns `Ok(())` if the server starts successfully, or an error otherwise.
-pub async fn start_server<H: ServerHandler>(
+async fn start_server<H: ServerHandler>(
     storage: Arc<dyn Storage<H::ServerType> + Send + Sync>,
     ip: &str,
     port: &str,
@@ -60,4 +60,26 @@ pub async fn start_server<H: ServerHandler>(
             }
         });
     }
+}
+
+pub async fn run<S>(
+    storage: Arc<dyn Storage<S::ServerType> + Send + Sync>,
+    ip: &str,
+    port: &str,
+    login_threshold: usize,
+    login_window: u64,
+    resp_timeout: u64,
+) where
+    S: ServerHandler<ServerType = S>,
+{
+    start_server::<S>(
+        storage,
+        ip,
+        port,
+        login_threshold,
+        login_window,
+        resp_timeout,
+    )
+    .await
+    .expect("Server failed to start");
 }

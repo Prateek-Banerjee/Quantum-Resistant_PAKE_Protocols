@@ -14,7 +14,7 @@ pub use crate::{
         ocake_pake::{client::OcakeClient, server::OcakeServer},
         tk_pake::{client::TkClient, server::TkServer},
     },
-    protocol_variants::{AvailableVariants, KemChoice},
+    protocol_variants::{AvailableVariants, KemChoice, PakeProtocol},
 };
 
 pub fn to_human_readable(bytes: &[u8]) -> &str {

@@ -1,7 +1,16 @@
 use super::{frodo_variant_wrapper::FrodoKemDispatcher, mlkem_variant_wrapper::MlKemDispatcher};
+use clap::ValueEnum;
 use serde::{Deserialize, Serialize};
 use serde_json::to_vec;
+use std::fmt::{Display, Formatter, Result};
 use strum_macros::EnumIter;
+
+#[derive(Clone, Copy, Debug, EnumIter, PartialEq, Eq, Serialize, Deserialize, Hash, ValueEnum)]
+pub enum PakeProtocol {
+    KemAePake,
+    OcakePake,
+    TkPake,
+}
 
 /// Enum representing the available variants depending on the choice of KEM.
 ///
@@ -9,7 +18,7 @@ use strum_macros::EnumIter;
 /// - `LightWeight`: Corresponds to Kyber-512 / Frodo640Shake.
 /// - `Recommended`: Corresponds to Kyber-768 / Frodo976Shake.
 /// - `Paranoid`: Corresponds to Kyber-1024 / Frodo1344Shake.
-#[derive(Clone, Copy, Debug, EnumIter, PartialEq, Eq, Serialize, Deserialize, Hash)]
+#[derive(Clone, Copy, Debug, EnumIter, PartialEq, Eq, Serialize, Deserialize, Hash, ValueEnum)]
 pub enum AvailableVariants {
     LightWeight,
     Recommended,
@@ -47,12 +56,26 @@ impl AvailableVariants {
     }
 }
 
+impl Display for AvailableVariants {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                Self::LightWeight => "light-weight",
+                Self::Recommended => "recommended",
+                Self::Paranoid => "paranoid",
+            }
+        )
+    }
+}
+
 /// Enum representing the available choice of KEMs.
 ///
 /// # Fields:
 /// - `Kyber`
 /// - `Frodo`
-#[derive(Clone, Copy, Debug, EnumIter, PartialEq, Eq, Serialize, Deserialize, Hash)]
+#[derive(Clone, Copy, Debug, EnumIter, PartialEq, Eq, Serialize, Deserialize, Hash, ValueEnum)]
 pub enum KemChoice {
     Kyber,
     Frodo,
@@ -62,5 +85,18 @@ impl KemChoice {
     /// Returns the KEM name as a `Vec<u8>`
     pub fn to_bytes(&self) -> Vec<u8> {
         to_vec(self).expect("Failed to serialize the KEM choice")
+    }
+}
+
+impl Display for KemChoice {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                Self::Kyber => "kyber",
+                Self::Frodo => "frodo",
+            }
+        )
     }
 }
