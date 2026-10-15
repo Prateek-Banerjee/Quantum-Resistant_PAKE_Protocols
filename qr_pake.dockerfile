@@ -24,8 +24,7 @@ COPY ./test_framework_api/ ./test_framework_api/
 # Build the app
 WORKDIR /app/test_framework_api
 
-RUN cargo build --bin server
-RUN cargo build --bin server_db_storage
+RUN cargo build --release --bin server
 
 # ---------- Runtime stage ----------
 FROM ubuntu:24.04
@@ -36,10 +35,16 @@ RUN apt-get update && \
     libssl3 && \
     rm -rf /var/lib/apt/lists/*
 
+RUN useradd --create-home --user-group server_user
+
 WORKDIR /app
 
-COPY --from=builder /app/test_framework_api/target/debug/server /app/server
+COPY --from=builder /app/test_framework_api/target/release/server /app/server
+
+RUN chown server_user:server_user /app/server
+
+USER server_user
 
 EXPOSE 8080
 
-CMD ["/app/server"]
+ENTRYPOINT [ "/app/server" ]
